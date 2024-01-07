@@ -1,0 +1,403 @@
+---
+title: "ETC5521 Assignment 1"
+subtitle: "assignment1-rosella"
+team: [rosella]
+author:
+  - [Yunzhi Chen]
+  - [Xianghe XU]
+date: "`r Sys.Date()`"
+output: 
+  html_document
+---
+
+[This assignment is for ETC5521 Assignment 1 by Team `r rmarkdown::metadata$team` comprising of `r knitr::combine_words(rmarkdown::metadata$author)`.]{style="color:#006DAE;"}
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  eval = TRUE,
+  message = FALSE,  
+  warning = FALSE,  
+  error = FALSE,    
+  out.width = "70%",
+  fig.align = "center",
+  fig.width = 8, 
+  fig.height = 7,
+  fig.retina = 3)
+```
+
+```{r install-package, echo = FALSE}
+# Data accessed via the afrimapr or afrilearndata packages
+# afrimapr or afrilearndata packages can be installed using the following commands:
+
+# remotes::install_github("afrimapr/afrilearndata")
+# remotes::install_github("afrimapr/afrihealthsites")
+```
+
+```{r libraries, echo = FALSE}
+library(afrilearndata)
+library(afrihealthsites)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(maps)
+library(knitr)
+library(tmap)
+```
+
+
+
+# Introduction and motivation
+
+A continent is one of Earth's seven main divisions of land, and there are seven continents around the world. 
+Africa, is the one of seven continents in the world. Africa is the world's second-largest continent; the area of Africa is about 30.3 million kilometer squares, and it covers 6% of entire Earth's total surface area and 20% of Earth's land area. The population size of Africa is also second-largest in the world with 1.4 billion people and it accounts for about 18% of the world's human population. Africa has 54 countries and the continent is enriched by a wide range of natural resources including the land resources and sea resources. However, despite of a wide range of natural resources and large size of population, the Africa is the least wealthy continent per capita in the world. In this analysis, we will be using the African data to have a close look some specific parts of Africa continent and aim to explore and learn more beyond just the values that were provided in the Africa data set and also develop a thoroughly understanding for the parts we are investigating in this analysis and deliver conclusions for the analysis.
+
+```{r mapafrica, echo = FALSE}
+map("world", regions = ".", projection = 'bonne', parameters = 60)
+```
+
+
+<h5>
+<center> 
+<strong>
+The Africa continent is located in the center of the projected world map figure above. 
+</strong>
+</center>
+</h5>
+
+<br>
+<br>
+
+# Data description
+
+
+### Source of the data
+
+- The data sets come from two packages which are __afrilearndata__ and __afrihealthsites__. These two packages are provided by the __afrimapr__ team. The __afrimapr__ team started in 2020 and is funded through the [Wellcome Open Research Fund](https://wellcome.org/) and [Wellcome Data for Science and Health](https://wellcome.org/what-we-do/data-science-and-health-trustworthy-data-science), afrimapr team creates R packages and learning resources where it helps public to perform spatial techniques and to make data-driven maps in Africa in an easier way.
+
+
+### The structure of the data
+
+#### __Package: afrilearndata__
+
+The package __afrilearndata__  provides small African spatial data-sets in an aim of helping people to perform spatial techniques and mapping in Africa, and it contains 8 objects (data sets) which are named as __africontinent, africountries, afrihighway, africapitals, afriqirports, afripop2020, afripop2000 and afrilandcover__, and each of these data sets contains spatial variables (geometry variables are in a type of multipolygon and points) as well as some other variables (character type and numeric type) which make it easier to understand each of object and making maps in Africa.
+
+- The data sets __africontinent__ and __africountries__ are polygons, which contains the geometry variable for continent outline and 51 African country boundaries respective. The object __africountries__ contains not only the geometry variable, and also it contains the names, GDP, population, income level and last census date for each African country. 
+
+- __afrihighway__ consists the name and geometry variables for 100 lines of African highway network.
+
+- __africapitals__ has 5 variables which are capital name, country name, population, iso3c (country codes) and geometry point for each country's capital city in Africa.
+
+- The data set __afriairports__ contains 3348 observations and 22 variables about the airport data in Africa. This data-set contains variables which can categories into the airport name, ID, type, elevation level, continent name, country name, geographic region codes , airport website link, score, last-update date and geometry point of the airport. 
+
+- The data set __afripop2020 and afripop2000__ are in a form of raster grid, which is a kind of data storage format and normally represents geographic data as a matrix of cells that each contains an attribute value. __afripop2000 and afripop2020__ store the population density from [WorldPop](https://www.worldpop.org/) aggregated to 20km squares for the years 2000 and 2020 respectively. 
+
+- The object __afrilandcover__ is also raster grid, and it contains the data about landcover in 2019, categorical, 20km from [MODIS](https://lpdaac.usgs.gov/products/mcd12c1v006/)
+
+#### __Package: afrihealthsites__
+
+The package __afrihealthsites__  provides an access to geographic locations of African health facilities from different sources. This implies that the __afrihealthsites__ package enables people to view the geographic locations of health sites in each African country by choosing different data sources and in various plotting forms. This package contains 5 data sets which are named as __afcountries, df_who_sites, sf_healthsites_af, sfssd and who_type_lookup__ and these data sets contains spatial variables (geometry variables are in a type of points) as well as some other variables (character type and numeric type).
+
+- The data set __afcountries__ has two variables (country name and iso3c country code) and both variables are character type. 
+
+- The data set __df_who_sites__ comes from WHO (World Health organisation) and it has 12 variables which are country name, admin, facility name, facility type, ownership, latitude, longitude, iso3c country code, facility type 9, tier and tier name for each of health site in Africa. There appears to be 98745 rows which represents there are 98745 health sites in Africa. 
+
+- __sf_healthsites_af__ and __sfssd__ data sets are other sources about data of the health sites in Africa, the data sets has some similar variables compared with __df_who_sites__ such as country name, iso3c country code, types and location for the health sites.
+
+- __who_type_lookup__ contains 3 variables which are country name, type and facility type nice, this data set may be used as type look-up for health site in African countries.
+
+# Questions of interest
+
+- How many observations do data have?
+
+- What is the data type of each feature?
+
+- Do data have null values?
+
+- How much memory does this dataset use? Could this pose a problem for later on?
+
+- What is the distribution of each variable?
+
+- Any values that look like errors?
+
+- Is there any duplicated data?
+
+- Is the null value a result of the way data was recorded?
+
+- Can drop the rows with null values without it significantly affecting analysis?
+
+- Are there so many missing values for a variable that should drop that variable from dataset?
+
+- Are there any variables that represent the same information? Can one be dropped?
+
+- **What is the distribution of each type of Healthsite in different parts of Africa?**
+
+- What does the change in population in 2000 compared to 20 years later tell us?
+
+- What is the distribution of the airports' elevation levels?
+
+- Which type of airports is more commonly seen in African countries?
+
+- **Does a greater population country have more of airports regardless types of airport, and vice versa?**
+
+- **What is the distribution of the counts of airport for countries in Africa?**
+
+- Which airport obtains the highest score?
+
+- Which elevation level has highest number of airports?
+
+- Are the airports in Africa located in a favor of high elevation level or a low elevation level?
+
+- Are the airports in each country built in similar elevation levels? 
+
+- **How does the GDP of each African country compare to each other?**
+
+# Expected findings
+
+#### What is the distribution of each type of Healthsite in different parts of Africa?
+
+- The hospital occupies the largest proportion, much higher than the number of Dispensary, followed closely by various health clinics or health centers.
+
+#### Does a greater population country have more of airports regardless types of airport, and vice versa?
+
+- It depends on the country's GDP and the degree of national development, a country has a greater size of population should have more airports to meet the travelling needs.
+
+#### What is the distribution of the counts of airport for countries in Africa?
+
+- The distribution of the counts of airport for each countries should display a bell shape (Normal distribution), which implies some countries has more airports and some has less. Moreover, It seems that South Africa had a large number of airports, making it the leading country in Africa in terms of airport ownership.
+
+#### How does the GDP of each African country compare to each other?
+
+- The GDP of the each African country should vary from each other, despite of that all the countries are in a same continent, the economic development of each country will be hardly the same. South Africa occupies the top of the list, followed by Egypt.
+
+# Analysis and findings
+
+#### What is the distribution of each type of Healthsite in different parts of Africa?
+
+```{r healthsites, echo = FALSE, fig.width = 12, fig.height = 8, message = FALSE, warning = FALSE}
+
+type <- tm_shape(sf_healthsites_af) + tm_bubbles(size = 1, shape = 10, col = "darkorange") + 
+  tm_shape(africountries) +
+     tm_borders("grey", lwd = .5) +
+     tm_text("name_fr", auto.placement=FALSE, remove.overlap=FALSE, just='centre', col='red4', size=0.7 ) 
+type    
+
+#WHO
+sites <- df_who_sites %>% drop_na() %>%
+  rename(Type = facility_type_9)
+
+p1 <-  
+  ggplot(sites, 
+         aes(x = Long, 
+             y = Lat,
+             color = Type)) + 
+    geom_point() 
+  
+p1
+
+```
+
+The first graph shows the bubble map of all health sites established in Africa. By using the `tmap` function, importing the data, drawing the outline boundary first, and then overlaying the health sites data to present the distribution of all sites.
+
+The second graph illustrates the distribution of health sites established by WHO in African countries. The distribution is obtained by cleaning up the `df_who_sites` dataset, cleaning out the part of NA, and then drawing the latitude and longitude position of each health sites by ggplot function, and marking different types of health sites with color. 
+
+By combining the country name information and the distribution diagram of each type of health sites, it can be concluded that the most widely distributed types are health clinic, health post and health station, which is surprising me that the distribution of health sites is actually very wide, basically covering most of the African countries.
+
+
+#### Does a greater population country have more of airports regardless types of airport, and vice versa?
+
+```{r airports, echo = FALSE, fig.width = 12, fig.height = 8, message = FALSE, warning = FALSE}
+airport_num <- afriairports %>% 
+  select(type, name, country_name) %>% 
+  st_drop_geometry() %>% 
+  rename(countryname = country_name) %>%
+  group_by(countryname) %>%
+  count(name) %>%
+  summarise(number = sum(n))
+
+country <- africapitals %>% 
+  st_drop_geometry() 
+  
+airports <- airport_num %>% 
+  left_join(country, 
+            by = "countryname") %>%
+  drop_na()
+
+p2 <- ggplot(airports, 
+             aes(x = number,
+                 y = pop,
+                 fill = countryname)) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5))
+p2
+  
+#GDP
+p3 <- ggplot(africountries, 
+             aes(x = name,
+                 y = gdp_md_est,
+                 fill = name)) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5)) 
+p3
+```
+
+
+Firstly, the data set required for this question: `afrirports` and `africapitals` are pre-processed (to remove the missing value), the geom column is removed, and then the number of airports contained in each country is counted. And after the `left_join` function is run, a data set containing country name, number of airports, population, etc. is finally obtained. 
+
+Then the population and the number of airports are visualized, resulting in the first graph above. From this graph, we can conclude that there is no necessary relationship between the population and the number of airports, and that a larger population does not lead to a higher number of airports. Instead, countries with medium or even small populations have more financial resources to support the construction of more airports.
+
+Using additional data sets `africountries` to explore the estimated GDP for each country, the higher GDP reflects the higher wealth capacity of the country to provide more airports for its citizens.
+
+<br> 
+
+#### What is the distribution of the counts of airport for countries in Africa?
+
+```{r}
+
+afriairports1 <- data.frame(country_name = afriairports$country_name)
+
+p11 <- afriairports1 |>
+  group_by(country_name) |>
+  summarise("Total" = n()) 
+p1 <- p11 |>
+  ggplot(aes(x = country_name,
+             y = Total)) +
+  geom_col() +
+  geom_hline(yintercept = 100, color = "red") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  labs(x = "African Countries",
+       y = "Total number airports") +
+  ggtitle("The distribution of number of airports in each African country")
+
+
+
+grid.arrange(p1)
+```
+<br>
+<br>
+<strong>Table: The top 20 countries for number of airports</strong>
+```{r}
+afriairports1 |>
+  group_by(country_name) |>
+  summarise("Total_airports" = n()) |>
+  arrange(desc(Total_airports)) |>
+  head(20) |> 
+  kable(label = "The top 20 countries for number of airports", align = "lc") |>
+  kableExtra::kable_classic()
+```
+
+<br>
+<br>
+
+The above plot is plotted by using the data set _afriairports_, and using summary statistics function to count the total number of airports for each country in Africa and then plot the country with the corresponding number of airport, and I use red at y-intercept of 100 (100 airports) to make a simple compare. 
+
+The above plot shows the distribution of total number of airports for all the countries in the Africa continent, the distribution is arranged in an alphabetically order by the country names. If we are just looking at the entire plot and ignore the gaps between those countries which have outstanding total number of airports, it seems that the distribution is slightly negatively-skewed, this is contradicted to my answer in my "Expected Findings" where I was expected that the distribution of the counts of airports in each country will display a bell shape (A Normal Distribution). 
+
+However, we actually can not ignore the gaps between those outstanding columns in the graph. The graph is actually showing a characteristics of Multimodal, there are quite a few of peak standing out among all the African countries. This indicates that there are only a few countries in Africa has larger number of airports and most countries are only having very less number of airports, and it also exhibits a gap for the number of total airports between the countries, the gap refers to a few countries have a lot number of airports and other countries have very less airports. 
+
+Obviously, the country South Africa has the highest number of airports. This matches what I had in my "EXPECT FINDINGS", the reason that I have got this right is South Africa is a more well-known country  comparing with other African countries and which also means more well-developed. 
+
+In this case, the African countries are ordered alphabetically, as the consequence, the plot demonstrates multiple peaks which is Multimodal. The outstanding peaks suggests that the countries has more airports which implies a relatively better economic environment in those countries, so they can afford to build and maintain large number of airports.
+
+In conclusion, it can be concluded that the distribution of the numbers of airport in each country are different compared to each other and some countries have quite large number of airports.
+
+<br>
+<br>
+<br>
+
+#### How does the GDP of each African country compare to each other?
+
+```{r}
+africountries1 <- data.frame(country_name = africountries$name, GDP = africountries$gdp_md_est / 1000)
+
+p3 <- africountries1 |>
+  ggplot(aes(x = country_name,
+             y = GDP)) +
+  geom_col() +
+  geom_hline(yintercept = 100, color = "red") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  labs(x = "African Countries",
+       y = "GDP estimates (in billion dollar)") +
+  ggtitle("The distribution of African countries' GDP")
+
+grid.arrange(p3)
+```
+
+<br>
+<strong>Table: The top 20 highest GDP countries in Africa</strong>
+
+```{r}
+africountries1 |>
+  rename("GDP_billion_dollar" = GDP) |>
+  arrange(desc(GDP_billion_dollar)) |>
+  head(20) |> 
+  kable(label = "The top 20 highest GDP countries in Africa", align = "cc") |>
+  kableExtra::kable_classic()
+```
+
+<br>
+The above plot is plotted by using the data set _africountries_, and using the variable country name and countries' GDP estimate values to construct the column graph and the table, and I draw a red line in the graph at y-intercept of 100 (100 airports) to make a simple compare. 
+
+The above plot displays the distribution of estimated GDP for the African countries, the GDP estimates are plotted in an alphabetical order of the countries name. From the plot, we can observe that the distribution of estimated GDP is multimodal; there are only six African countries have GDP exceeding 100 billion dollar and the rest countries are all having GDP less than the 100 billion dollar or even lower. This implies the GDPs of the countries in Africa are not all in a similar level; those countries with peaks in the GDP plot are more wealthy compared with other countries and a higher GDP also means a better development of economy in the country. 
+
+The observation from the plot supports the answer we made in the "Expected Findings", which is that, despite of that all of the countries are in a same continent, each country has its own development in economy and the way of development is impossibly being the same and so that some countries have relatively better economy and some countries seem not doing well. Hence, it can be concluded that the GDP of the each country in Africa varies from each other.  
+
+<br>
+<br>
+<strong>Table: Top 10 greatest total number airport countries and Top 10 highest GDP countries <strong>
+```{r}
+p12 <- p11 %>%
+  arrange(desc(Total)) %>%
+  head(10)
+
+africountries12 <- africountries1 %>%
+  arrange(desc(GDP)) %>%
+  head(10)
+
+binddata <- bind_cols(p12, africountries12) %>%
+  rename("country_airport" = "country_name...1",
+         "country_GDP" = "country_name...3")
+binddata %>%
+  kable() %>%
+  kableExtra::kable_classic()
+```
+
+<br>
+
+The distribution plot of total number airports in each African country seems similar compared to the countries' GDP distribution plot, which are that both plots have some outstanding peaks and most countries have relatively smaller values comparing with the peaks. However, when we take a close look at the table above,(I am using the function column bind from dplyr package to combine the top 10 countries has highest number airports with the top 10 countries that has greatest estimation of GDP, so that two columns on the left of the table are the top 10 countries with highest number of airport, and two columns on the right are top 10 countries with highest GDP estimations) despite of that the country South Africa appears to be the country which has an extraordinary high number of airports (it has 503 airports in total and this number is way greater than other countries' airports) and also highest GDP estimation (491 billion dollar) among all African countries. However, there are only two countries, South Africa and Angola, appears in both lists of country name, and most countries in country_airport variable are not appeared in the country_GDP variable, this implies that a country has more number of airports is not necessarily having a higher GDP value, and vice versa. Hence, it can be conclude that a higher the GDP level of a country is not necessary accounted for a greater number of airport in that country. 
+
+
+# References
+
+Andy South (2022). afrilearndata: Small Africa Map Datasets for Learning. R package version
+  0.0.0.9003.
+  
+Andy South (2022). afrihealthsites: Geographic locations of African health facilities from
+  different sources. R package version 0.1.0.9008. https://github.com/afrimapr/afrihealthsites
+  
+Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R, Grolemund G, Hayes A, Henry L,
+Hester J, Kuhn M, Pedersen TL, Miller E, Bache SM, Müller K, Ooms J, Robinson D, Seidel DP, Spinu
+V, Takahashi K, Vaughan D, Wilke C, Woo K, Yutani H (2019). “Welcome to the tidyverse.” _Journal of
+Open Source Software_, *4*(43), 1686. doi: 10.21105/joss.01686 (URL:
+https://doi.org/10.21105/joss.01686).
+
+Hadley Wickham, Romain François, Lionel Henry and Kirill Müller (2022). dplyr: A Grammar of Data
+  Manipulation. R package version 1.0.9. https://CRAN.R-project.org/package=dplyr
+  
+H. Wickham. ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York, 2016.
+
+Hao Zhu (2021). kableExtra: Construct Complex Table with 'kable' and Pipe Syntax. R package version
+  1.3.4. https://CRAN.R-project.org/package=kableExtra
+  
+Original S code by Richard A. Becker, Allan R. Wilks. R version by Ray Brownrigg. Enhancements by
+  Thomas P Minka and Alex Deckmyn. (2021). maps: Draw Geographical Maps. R package version 3.4.0.
+  https://CRAN.R-project.org/package=maps
+  
+Yihui Xie (2021). knitr: A General-Purpose Package for Dynamic Report Generation in R. R package
+  version 1.37.
+
+Tennekes M (2018). “tmap: Thematic Maps in R.” _Journal of Statistical Software_, *84*(6), 1-39. doi:
+10.18637/jss.v084.i06 (URL: https://doi.org/10.18637/jss.v084.i06).

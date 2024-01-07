@@ -1,0 +1,38 @@
+---
+title: "ETC5521 Assignment 1"
+subtitle: "assignment1-rosella"
+team: [rosella]
+author:
+  - [Yunzhi Chen]
+  - [Xianghe XU]
+date: "`r Sys.Date()`"
+output: 
+  html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+glimpse(afriairports)
+glimpse(africapitals)
+glimpse(africontinent)
+glimpse(africountries)
+glimpse(afrihighway)
+glimpse(afrilandcover)
+glimpse(afripop2000)
+glimpse(afripop2020)
+```
+
+```{r}
+glimpse(afcountries)
+glimpse(df_who_sites)
+glimpse(sf_healthsites_af)
+glimpse(sfssd)
+glimpse(who_type_lookup)
+```
+
